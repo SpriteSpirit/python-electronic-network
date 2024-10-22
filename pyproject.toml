@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "python-attestation-task"
+version = "0.1.0"
+description = ""
+authors = ["Sprite_Spirit <Sprite.spirit.t.me@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+django = "^5.1.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
