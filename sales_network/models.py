@@ -70,7 +70,6 @@ class NetworkNode(models.Model):
     products = models.ManyToManyField(Product, verbose_name='Продукты', blank=True)
     debt = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Задолженность перед поставщиком',
                                default=0.00)
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Время создания')
 
     class Meta:
         verbose_name = 'Сеть'
