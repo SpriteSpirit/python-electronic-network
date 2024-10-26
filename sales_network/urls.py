@@ -1,10 +1,13 @@
-from django.urls import path
-
+from rest_framework.routers import DefaultRouter
 from .apps import SalesNetworkConfig
-from .views import index
+from .views import NetworkNodeViewSet
+
 
 app_name = SalesNetworkConfig.name
 
+router = DefaultRouter()
+router.register(r'suppliers', NetworkNodeViewSet, basename='suppliers')
+
 urlpatterns = [
-    path("", index, name="index"),
-]
+
+] + router.urls
