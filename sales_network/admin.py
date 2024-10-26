@@ -1,11 +1,14 @@
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.html import format_html
+
 from .models import NetworkNode, Product, Supplier, ContactInfo
 
 
 @admin.register(NetworkNode)
 class NetworkNodeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'level', 'supplier', 'get_products', 'debt', )
-    list_filter = ('name', 'supplier', 'debt', 'level', )
+    list_display = ('name', 'level', 'get_supplier_link', 'get_products', 'debt',)
+    list_filter = ('name', 'supplier', 'debt', 'level', 'supplier__contact_info__city')
     search_fields = ('name' 'supplier', 'debt', )
     ordering = ('-name',)
 
@@ -15,6 +18,16 @@ class NetworkNodeAdmin(admin.ModelAdmin):
     def clear_debt(self, request, queryset):
         count = queryset.update(debt=0)
         self.message_user(request, f'{count} запись успешно обновлена.')
+
+    def get_supplier_link(self, obj):
+        if obj.supplier:
+            url = reverse('admin:sales_network_supplier_change', args=[obj.supplier.pk])
+            return format_html('<a href="{}">{}</a>', url, obj.supplier.name)
+        else:
+            return "Нет поставщика"
+
+    get_supplier_link.short_description = 'Поставщик'  # Название столбца
+    get_supplier_link.admin_order_field = 'supplier__name'  # Для сортировки (опционально)
 
     def get_products(self, obj):
         # Возвращает строку с названиями всех продуктов, связанных с данной сетью
