@@ -67,7 +67,7 @@ class NetworkNode(models.Model):
     name = models.CharField(max_length=255, verbose_name='Название')
     level = models.IntegerField(choices=LEVEL_CHOICES, verbose_name='Уровень')
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, verbose_name='Поставщик', **NULLABLE)
-    products = models.ManyToManyField(Product, verbose_name='Продукты', blank=True)
+    products = models.ManyToManyField(Product, verbose_name='Товары', blank=True)
     debt = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Задолженность перед поставщиком',
                                default=0.00)
 
