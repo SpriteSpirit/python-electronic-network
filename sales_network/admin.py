@@ -1,60 +1,67 @@
-from django.contrib import admin
-from django.urls import reverse
-from django.utils.html import format_html
+from django.db.models import F
 
-from .models import NetworkNode, Product, Supplier, ContactInfo
+from django.contrib import admin
+from .models import NetworkNode, Product, ContactInfo
+
+
+class LevelListFilter(admin.SimpleListFilter):
+    """
+    Фильтр по уровню сети
+    """
+    title = 'Уровень'  # Заголовок фильтра
+    parameter_name = 'level'
+
+    def lookups(self, request, model_admin):
+        # Возвращает список вариантов для фильтра
+        return (
+            (0, 'Завод'),
+            (1, 'Розничная сеть'),
+            (2, 'Индивидуальный предприниматель'),
+        )
+
+    def queryset(self, request, queryset):
+        """
+        Фильтрует queryset на основе выбранного значения
+        """
+        value = self.value()
+        # Преобразуем значение в число и применим фильтр к queryset'у, если оно указано'
+        if value is not None:
+            try:
+                level = int(value)
+                return queryset.annotate(level=F('get_level')).filter(level=level)
+            except ValueError:
+                # Обработка некорректных значений
+                return queryset
+        return queryset
 
 
 @admin.register(NetworkNode)
 class NetworkNodeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'level', 'get_supplier_link', 'get_products', 'debt',)
-    list_filter = ('name', 'supplier', 'debt', 'level', 'supplier__contact_info__city')
-    search_fields = ('name' 'supplier', 'debt', )
-    ordering = ('-name',)
-
-    actions = ('clear_debt',)
+    """
+    Админка сетей
+    """
+    list_display = ('name', 'get_level', 'supplier', 'debt')
+    list_filter = ('contact_info__country', 'created_at', 'supplier', LevelListFilter)
+    readonly_fields = ('created_at',)
+    actions = ['clear_debt']
 
     @admin.action(description='Очистить задолженность')
     def clear_debt(self, request, queryset):
-        count = queryset.update(debt=0)
-        self.message_user(request, f'{count} запись успешно обновлена.')
-
-    def get_supplier_link(self, obj):
-        if obj.supplier:
-            url = reverse('admin:sales_network_supplier_change', args=[obj.supplier.pk])
-            return format_html('<a href="{}">{}</a>', url, obj.supplier.name)
-        else:
-            return "Нет поставщика"
-
-    get_supplier_link.short_description = 'Поставщик'  # Название столбца
-    get_supplier_link.admin_order_field = 'supplier__name'  # Для сортировки (опционально)
-
-    def get_products(self, obj):
-        # Возвращает строку с названиями всех продуктов, связанных с данной сетью
-        return ", ".join([product.name for product in obj.products.all()]) if obj.products.exists() else "Нет товаров"
-
-    get_products.short_description = 'Товары'
+        queryset.update(debt=0)
 
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'model', 'release_date', 'supplier', )
-    list_filter = ('name', 'model', 'release_date', 'supplier', )
-    search_fields = ('name' 'model', 'supplier', )
-    ordering = ('-name',)
-
-
-@admin.register(Supplier)
-class SupplierAdmin(admin.ModelAdmin):
-    list_display = ('name', 'contact_info', 'created_at', )
-    list_filter = ('name', 'contact_info', 'created_at', )
-    search_fields = ('name' 'contact_info', 'created_at', )
-    ordering = ('-name',)
+    """
+    Админка товаров
+    """
+    list_display = ('name', 'model', 'release_date')  # Убрали supplier
+    list_filter = ('release_date',)  # Убрали supplier
 
 
 @admin.register(ContactInfo)
 class ContactInfoAdmin(admin.ModelAdmin):
-    list_display = ('email', 'country', 'city', 'street', 'house_number', )
-    list_filter = ('email', 'country', 'city', )
-    search_fields = ('email' 'country', 'city', )
-    ordering = ('-email',)
+    """
+    Админка контактных данных
+    """
+    list_display = ('email', 'country', 'city', 'street', 'house_number')
